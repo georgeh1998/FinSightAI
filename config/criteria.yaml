@@ -1,0 +1,76 @@
+analysis:
+  pl:
+    revenue_growth_yoy:
+      description: "売上高成長率(YoY)"
+      thresholds:
+        pass: 10.0
+        excellent: 20.0
+        top_class: 30.0
+    operating_margin:
+      description: "営業利益率(%)"
+      industry_targets:
+        retail_wholesale: [1.0, 5.0]
+        manufacturing: [5.0, 10.0]
+        info_comm: 15.0
+        pharma_high_profit: 30.0
+      default_target: 10.0
+    progress_rate_2q:
+      description: "2Q時点の進捗率(%)"
+      good: 55.0
+      bad: 45.0
+    sga_efficiency:
+      description: "販管費の効率性(定性)"
+      good_keywords: ["研究開発", "広告宣伝"]
+      bad_keywords: ["役員報酬", "交際費"]
+
+  bs:
+    capital_adequacy_ratio:
+      description: "自己資本比率(%)"
+      safe: 40.0
+      ironclad: 50.0
+    current_ratio:
+      description: "流動比率(%)"
+      danger: 100.0
+      safe: 150.0
+      very_safe: 200.0
+    quick_ratio:
+      description: "当座比率(%)"
+      caution: 70.0
+      safe: 100.0
+    de_ratio:
+      description: "D/Eレシオ(倍)"
+      healthy: 1.0
+      very_safe: 0.5
+      danger: 2.0
+
+  cf:
+    operating_cf_vs_profit:
+      description: "営業CF > 営業利益"
+    operating_cf_margin_vs_operating_margin:
+      description: "営業CFマージン > 営業利益率"
+    investment_cf:
+      description: "投資CFがマイナスか"
+      expected: "negative"
+    fcf:
+      description: "フリーキャッシュフローがプラスか"
+      expected: "positive"
+
+  valuation:
+    per:
+      description: "PER(倍)"
+      standard: 15.0
+    pbr:
+      description: "PBR(倍)"
+      dissolution_value: 1.0
+    peg:
+      description: "PEGレシオ(倍)"
+      undervalued: 1.0
+
+  qualitative:
+    checkpoints:
+      - "コメントの具体性"
+      - "未来への戦略"
+      - "過去からの一貫性"
+      - "事業リスクの理解、対策"
+      - "主語が自分か"
+      - "株主をパートナーとして見ているか"
