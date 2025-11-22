@@ -12,6 +12,26 @@ class Evaluator:
         criteria = self.config['analysis']
 
         # --- P/L Analysis ---
+        # Progress Rate (2Q check logic, but generalized)
+        # If "2Q" is in fiscal_period or similar context, we could apply specific logic.
+        # Here we just check against the default "good" threshold if forecast is available.
+        if current_data.net_sales and current_data.forecast_net_sales:
+            progress = (current_data.net_sales / current_data.forecast_net_sales) * 100
+            assessment = "Bad"
+            if progress >= criteria['pl']['progress_rate_2q']['good']:
+                assessment = "Good"
+            elif progress <= criteria['pl']['progress_rate_2q']['bad']:
+                assessment = "Bad"
+            else:
+                assessment = "Neutral"
+
+            evaluations.append(EvaluationResult(
+                metric_name="通期進捗率(売上)",
+                value=f"{progress:.2f}%",
+                assessment=assessment,
+                details=f"Forecast: {current_data.forecast_net_sales}"
+            ))
+
         # YoY Sales Growth
         if current_data.net_sales and last_year_data and last_year_data.net_sales:
             growth = ((current_data.net_sales - last_year_data.net_sales) / last_year_data.net_sales) * 100
@@ -93,6 +113,42 @@ class Evaluator:
                 assessment=assessment
             ))
 
+        # --- Cash Flow Analysis ---
+        if current_data.operating_cf is not None and current_data.operating_profit is not None:
+            assessment = "Good" if current_data.operating_cf > current_data.operating_profit else "Bad"
+            evaluations.append(EvaluationResult(
+                metric_name="営業CF > 営業利益",
+                value=f"CF:{current_data.operating_cf} vs OP:{current_data.operating_profit}",
+                assessment=assessment
+            ))
+
+        if current_data.operating_cf is not None and current_data.net_sales:
+            ocf_margin = (current_data.operating_cf / current_data.net_sales) * 100
+            op_margin = (current_data.operating_profit / current_data.net_sales) * 100 if current_data.operating_profit else 0
+            assessment = "Good" if ocf_margin > op_margin else "Lower than OP Margin"
+            evaluations.append(EvaluationResult(
+                metric_name="営業CFマージン > 営業利益率",
+                value=f"OCF%:{ocf_margin:.2f}% vs OP%:{op_margin:.2f}%",
+                assessment=assessment
+            ))
+
+        if current_data.investment_cf is not None:
+            assessment = "Normal" if current_data.investment_cf < 0 else "Attention (Positive)"
+            evaluations.append(EvaluationResult(
+                metric_name="投資CF",
+                value=f"{current_data.investment_cf}",
+                assessment=assessment
+            ))
+
+        if current_data.operating_cf is not None and current_data.investment_cf is not None:
+            fcf = current_data.operating_cf + current_data.investment_cf  # Investment CF is usually negative
+            assessment = "Positive" if fcf > 0 else "Negative"
+            evaluations.append(EvaluationResult(
+                metric_name="フリーキャッシュフロー(FCF)",
+                value=f"{fcf}",
+                assessment=assessment
+            ))
+
         # --- Valuation ---
         vals = {}
         if current_data.eps:
@@ -142,6 +198,10 @@ class Evaluator:
             ordinary_profit=pl.get('ordinary_profit'),
             net_income=pl.get('net_income'),
             eps=pl.get('eps'),
+
+            forecast_net_sales=pl.get('forecast_net_sales'),
+            forecast_operating_profit=pl.get('forecast_operating_profit'),
+            forecast_net_income=pl.get('forecast_net_income'),
 
             total_assets=bs.get('total_assets'),
             total_net_assets=bs.get('total_net_assets'),
