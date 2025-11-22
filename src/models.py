@@ -10,6 +10,11 @@ class FinancialData:
     net_income: Optional[float] = None
     eps: Optional[float] = None
 
+    # Forecast
+    forecast_net_sales: Optional[float] = None
+    forecast_operating_profit: Optional[float] = None
+    forecast_net_income: Optional[float] = None
+
     # BS
     total_assets: Optional[float] = None
     total_net_assets: Optional[float] = None

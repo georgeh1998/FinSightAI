@@ -28,6 +28,9 @@ class AIAnalyzer:
            - ordinary_profit: 経常利益 (単位: 百万円)
            - net_income: 当期純利益 (単位: 百万円)
            - eps: 1株当たり当期純利益 (単位: 円)
+           - forecast_net_sales: 通期売上高予想 (単位: 百万円)
+           - forecast_operating_profit: 通期営業利益予想 (単位: 百万円)
+           - forecast_net_income: 通期当期純利益予想 (単位: 百万円)
 
         3. **貸借対照表データ (bs)**
            - total_assets: 総資産 (単位: 百万円)
