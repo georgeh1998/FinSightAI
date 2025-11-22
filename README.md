@@ -7,12 +7,20 @@ AIを利用してPDFから情報を抽出し、成長性、収益性、安全性
 
 ### 1. プロジェクトの準備
 
-リポジトリをクローンし、必要なライブラリをインストールします。
+リポジトリをクローンし、仮想環境(venv)を作成して、必要なライブラリをインストールします。
 
 ```bash
+# リポジトリのクローン
 git clone <repository_url>
 cd <repository_name>
-pip install -r requirements.txt
+
+# 仮想環境の作成と有効化
+python3 -m venv venv
+source venv/bin/activate  # Mac/Linux
+# Windowsの場合: .\venv\Scripts\activate
+
+# 依存ライブラリのインストール
+pip3 install -r requirements.txt
 ```
 
 ### 2. APIキーの設定
@@ -50,7 +58,7 @@ $env:OPENAI_API_KEY="sk-..."
 以下のコマンドでツールを実行します。
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 実行後、プロンプトに従って以下を入力します。
