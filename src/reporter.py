@@ -8,9 +8,30 @@ class Reporter:
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
-    def generate_markdown_report(self, report: AnalysisReport):
-        filename = f"{report.company_name}_{datetime.now().strftime('%Y-%m-%d')}.md"
-        filepath = os.path.join(self.output_dir, filename)
+    def generate_markdown_report(self, report: AnalysisReport, stock_code: str, current_text: str = "", prev_text: str = ""):
+        date_str = datetime.now().strftime('%Y-%m-%d')
+
+        # Sanitize company name
+        safe_company_name = "".join([c for c in report.company_name if c.isalnum() or c in (' ', '_', '-')]).strip()
+        folder_name = f"{stock_code}_{safe_company_name}"
+
+        report_dir = os.path.join(self.output_dir, folder_name, date_str)
+        if not os.path.exists(report_dir):
+            os.makedirs(report_dir)
+
+        filename = f"report.md"
+        filepath = os.path.join(report_dir, filename)
+
+        # Save extracted text
+        if current_text:
+            text_filename = "current_extracted_text.txt"
+            with open(os.path.join(report_dir, text_filename), 'w', encoding='utf-8') as f:
+                f.write(current_text)
+
+        if prev_text:
+            prev_text_filename = "previous_extracted_text.txt"
+            with open(os.path.join(report_dir, prev_text_filename), 'w', encoding='utf-8') as f:
+                f.write(prev_text)
 
         md = []
         md.append(f"# 企業分析レポート: {report.company_name}")

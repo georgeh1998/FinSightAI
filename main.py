@@ -62,6 +62,7 @@ def main():
 
     # Extract & Analyze Previous (if exists)
     last_year_data = None
+    prev_text = ""
     if prev_pdf_path:
         prev_text = extract_text_from_pdf(prev_pdf_path)
         if prev_text:
@@ -73,7 +74,7 @@ def main():
     print("データを評価中...")
     report = evaluator.evaluate(current_data, last_year_data, stock_price)
 
-    reporter.generate_markdown_report(report)
+    reporter.generate_markdown_report(report, stock_code, current_text, prev_text)
     print("\n完了しました。outputフォルダを確認してください。")
 
 if __name__ == "__main__":

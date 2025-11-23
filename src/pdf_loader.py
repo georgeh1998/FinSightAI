@@ -29,7 +29,7 @@ def parse_filename(filename: str) -> Optional[Tuple[str, str, str]]:
 
 def find_financial_reports(input_dir: str, target_code: str) -> dict:
     """
-    Scans the input directory for files matching the target code.
+    Scans the input directory (recursively) for files matching the target code.
     Returns a dictionary organized by year/quarter.
     Structure:
     {
@@ -41,16 +41,17 @@ def find_financial_reports(input_dir: str, target_code: str) -> dict:
     if not os.path.exists(input_dir):
         return reports
 
-    for filename in os.listdir(input_dir):
-        if not filename.endswith(".pdf"):
-            continue
+    for root, dirs, files in os.walk(input_dir):
+        for filename in files:
+            if not filename.endswith(".pdf"):
+                continue
 
-        parsed = parse_filename(filename)
-        if parsed:
-            code, year, quarter = parsed
-            if code == target_code:
-                if year not in reports:
-                    reports[year] = {}
-                reports[year][quarter] = os.path.join(input_dir, filename)
+            parsed = parse_filename(filename)
+            if parsed:
+                code, year, quarter = parsed
+                if code == target_code:
+                    if year not in reports:
+                        reports[year] = {}
+                    reports[year][quarter] = os.path.join(root, filename)
 
     return reports
