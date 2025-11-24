@@ -1,5 +1,5 @@
 import yaml
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from .models import FinancialData, EvaluationResult, AnalysisReport
 
 class Evaluator:
@@ -33,14 +33,58 @@ class Evaluator:
         # Operating Margin
         if current_data.net_sales and current_data.operating_profit:
             margin = (current_data.operating_profit / current_data.net_sales) * 100
-            target = criteria['pl']['operating_margin']['default_target']
-            assessment = "Good" if margin >= target else "Low" # Simplified logic
+
+            assessment = "Fail"
+            if margin >= criteria['pl']['operating_margin']['thresholds']['top_class']:
+                assessment = "Top Class"
+            elif margin >= criteria['pl']['operating_margin']['thresholds']['excellent']:
+                assessment = "Excellent"
+            elif margin >= criteria['pl']['operating_margin']['thresholds']['pass']:
+                assessment = "Pass"
+
             evaluations.append(EvaluationResult(
                 metric_name="営業利益率",
                 value=f"{margin:.2f}%",
-                assessment=assessment,
-                details=f"Target (Gen): {target}%"
+                assessment=assessment
             ))
+
+        # Operating Margin Improvement (YoY)
+        if (current_data.net_sales and current_data.operating_profit and
+            last_year_data and last_year_data.net_sales and last_year_data.operating_profit):
+            current_margin = (current_data.operating_profit / current_data.net_sales) * 100
+            last_year_margin = (last_year_data.operating_profit / last_year_data.net_sales) * 100
+            margin_change = current_margin - last_year_margin
+
+            assessment = "Improving" if margin_change > 0 else "Declining"
+            evaluations.append(EvaluationResult(
+                metric_name="営業利益率の改善(YoY)",
+                value=f"{margin_change:+.2f}%pt",
+                assessment=assessment,
+                details=f"前年同期: {last_year_margin:.2f}% → 今期: {current_margin:.2f}%"
+            ))
+
+        # Progress Rate (Quarter-specific)
+        quarter = self._extract_quarter(current_data.fiscal_period)
+        if quarter and current_data.operating_profit and current_data.operating_profit_forecast:
+            progress_rate = (current_data.operating_profit / current_data.operating_profit_forecast) * 100
+            thresholds = criteria['pl']['progress_rate'].get(quarter, {})
+
+            if thresholds:
+                good_threshold = thresholds.get('good')
+                bad_threshold = thresholds.get('bad')
+
+                assessment = "Attention"
+                if good_threshold and progress_rate >= good_threshold:
+                    assessment = "Good"
+                elif bad_threshold and progress_rate <= bad_threshold:
+                    assessment = "Bad"
+
+                evaluations.append(EvaluationResult(
+                    metric_name=f"進捗率({quarter})",
+                    value=f"{progress_rate:.1f}%",
+                    assessment=assessment,
+                    details=f"営業利益: {current_data.operating_profit:.0f}百万円 / 通期予想: {current_data.operating_profit_forecast:.0f}百万円"
+                ))
 
         # --- B/S Analysis ---
         # Equity Ratio
@@ -129,6 +173,22 @@ class Evaluator:
             valuations=vals
         )
 
+    def _extract_quarter(self, fiscal_period: str) -> Optional[str]:
+        """決算期から四半期を抽出 (例: '2024年12月期 第1四半期' -> '1Q')"""
+        if not fiscal_period:
+            return None
+
+        if '第1四半期' in fiscal_period or '1Q' in fiscal_period:
+            return '1Q'
+        elif '第2四半期' in fiscal_period or '2Q' in fiscal_period or '中間' in fiscal_period:
+            return '2Q'
+        elif '第3四半期' in fiscal_period or '3Q' in fiscal_period:
+            return '3Q'
+        elif '通期' in fiscal_period or '本決算' in fiscal_period or '期末' in fiscal_period:
+            return '通期'
+
+        return None
+
     def map_json_to_model(self, data: Dict[str, Any]) -> FinancialData:
         pl = data.get('pl', {})
         bs = data.get('bs', {})
@@ -142,6 +202,7 @@ class Evaluator:
             ordinary_profit=pl.get('ordinary_profit'),
             net_income=pl.get('net_income'),
             eps=pl.get('eps'),
+            operating_profit_forecast=pl.get('operating_profit_forecast'),
 
             total_assets=bs.get('total_assets'),
             total_net_assets=bs.get('total_net_assets'),

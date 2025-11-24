@@ -9,6 +9,7 @@ class FinancialData:
     ordinary_profit: Optional[float] = None
     net_income: Optional[float] = None
     eps: Optional[float] = None
+    operating_profit_forecast: Optional[float] = None  # 通期営業利益予想
 
     # BS
     total_assets: Optional[float] = None

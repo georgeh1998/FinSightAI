@@ -8,16 +8,28 @@ analysis:
         top_class: 30.0
     operating_margin:
       description: "営業利益率(%)"
-      industry_targets:
-        retail_wholesale: [1.0, 5.0]
-        manufacturing: [5.0, 10.0]
-        info_comm: 15.0
-        pharma_high_profit: 30.0
-      default_target: 10.0
-    progress_rate_2q:
-      description: "2Q時点の進捗率(%)"
-      good: 55.0
-      bad: 45.0
+      thresholds:
+        pass: 10.0
+        excellent: 15.0
+        top_class: 20.0
+    operating_margin_improvement:
+      description: "営業利益率の改善(YoY)"
+      check: "increasing"
+      comment: "増収減益では意味がない。利益率が上がっているかどうか"
+    progress_rate:
+      description: "期中進捗率(%)"
+      1Q:
+        good: 30.0
+        bad: 20.0
+      2Q:
+        good: 55.0
+        bad: 45.0
+      3Q:
+        good: 80.0
+        bad: 70.0
+      通期:
+        good: 100.0
+        bad: 95.0
     sga_efficiency:
       description: "販管費の効率性(定性)"
       good_keywords: ["研究開発", "広告宣伝"]
