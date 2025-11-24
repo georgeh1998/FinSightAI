@@ -4,6 +4,7 @@ from src.pdf_loader import find_financial_reports, extract_text_from_pdf
 from src.ai_analyzer import AIAnalyzer
 from src.evaluator import Evaluator
 from src.reporter import Reporter
+from src.data_loader import MarketDataLoader
 
 def main():
     print("=== 10倍株発掘ツール ===")
@@ -50,6 +51,11 @@ def main():
     evaluator = Evaluator("config/criteria.yaml")
     reporter = Reporter("output")
 
+    # Load Market Data
+    market_loader = MarketDataLoader("input/market_data.csv")
+    market_data_map = market_loader.load_data()
+    stock_market_data = market_data_map.get(stock_code, {})
+
     # Extract & Analyze Current
     current_text = extract_text_from_pdf(current_pdf_path)
     if not current_text:
@@ -71,7 +77,7 @@ def main():
 
     # 4. Evaluate & Report
     print("データを評価中...")
-    report = evaluator.evaluate(current_data, last_year_data, stock_price)
+    report = evaluator.evaluate(current_data, last_year_data, stock_price, stock_market_data)
 
     reporter.generate_markdown_report(report)
     print("\n完了しました。outputフォルダを確認してください。")

@@ -7,7 +7,7 @@ class Evaluator:
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
 
-    def evaluate(self, current_data: FinancialData, last_year_data: Optional[FinancialData], stock_price: float) -> AnalysisReport:
+    def evaluate(self, current_data: FinancialData, last_year_data: Optional[FinancialData], stock_price: float, market_data: Dict[str, float] = {}) -> AnalysisReport:
         evaluations = []
         criteria = self.config['analysis']
 
@@ -148,13 +148,33 @@ class Evaluator:
             vals['PBR'] = f"{pbr:.2f}倍"
 
         # PEG Ratio (PER / Growth Rate)
-        if current_data.eps and last_year_data and last_year_data.eps and last_year_data.eps > 0:
+        # Priority: 1. CSV PEG, 2. CSV EPS Growth, 3. Calculated EPS Growth
+        peg_val = None
+        peg_details = ""
+
+        # 1. Direct PEG from Market Data
+        if 'peg' in market_data:
+            peg_val = market_data['peg']
+            peg_details = " (Source: CSV)"
+
+        # 2. Calculate from Market Data Growth Rate
+        elif 'eps_growth' in market_data and 'PER' in vals and current_data.eps:
+            eps_growth = market_data['eps_growth']
+            if eps_growth > 0:
+                per_val = stock_price / current_data.eps
+                peg_val = per_val / eps_growth
+                peg_details = f" <small>(Growth: {eps_growth}%, Source: CSV)</small>"
+
+        # 3. Calculate from Financial Data
+        elif current_data.eps and last_year_data and last_year_data.eps and last_year_data.eps > 0:
              eps_growth = ((current_data.eps - last_year_data.eps) / last_year_data.eps) * 100
              if eps_growth > 0 and 'PER' in vals:
-                 # Recalculate PER numerical value
                  per_val = stock_price / current_data.eps
-                 peg = per_val / eps_growth
-                 vals['PEG'] = f"{peg:.2f}倍"
+                 peg_val = per_val / eps_growth
+                 peg_details = f" <small>(Growth: {eps_growth:.1f}%, Source: Calc)</small>"
+
+        if peg_val is not None:
+            vals['PEG'] = f"{peg_val:.2f}倍{peg_details}"
 
         qual_analysis = {
             "progress_comment": current_data.progress_comment,
